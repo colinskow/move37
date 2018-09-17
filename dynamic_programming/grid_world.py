@@ -1,26 +1,32 @@
-# https://deeplearningcourses.com/c/artificial-intelligence-reinforcement-learning-in-python
-# https://www.udemy.com/artificial-intelligence-reinforcement-learning-in-python
+# From The School of AI's Move 37 Course https://www.theschool.ai/courses/move-37-course/
+# Coding demo by Colin Skow
+# Forked from https://github.com/lazyprogrammer/machine_learning_examples/tree/master/rl
+# Credit goes to LazyProgrammer
 from __future__ import print_function, division
 from builtins import range
 # Note: you may need to update your version of future
 # sudo pip install -U future
-
 
 import numpy as np
 
 
 class Grid: # Environment
   def __init__(self, width, height, start):
+    # i is vertical axis, j is horizontal
     self.width = width
     self.height = height
     self.i = start[0]
     self.j = start[1]
 
-  def set(self, rewards, actions):
+  def set(self, rewards, actions, obey_prob):
     # rewards should be a dict of: (i, j): r (row, col): reward
     # actions should be a dict of: (i, j): A (row, col): list of possible actions
     self.rewards = rewards
     self.actions = actions
+    self.obey_prob = obey_prob
+
+  def non_terminal_states(self):
+    return self.actions.keys()
 
   def set_state(self, s):
     self.i = s[0]
@@ -49,25 +55,25 @@ class Grid: # Environment
     reward = self.rewards.get((i, j), 0)
     return ((i, j), reward)
 
-  def move(self, action):
-    (i, j), reward = self.check_move(action)
-    self.i = i
-    self.j = j
-    return reward
-
-  def undo_move(self, action):
-    # these are the opposite of what U/D/L/R should normally do
-    if action == 'U':
-      self.i += 1
-    elif action == 'D':
-      self.i -= 1
-    elif action == 'R':
-      self.j -= 1
-    elif action == 'L':
-      self.j += 1
-    # raise an exception if we arrive somewhere we shouldn't be
-    # should never happen
-    assert(self.current_state() in self.all_states())
+  def get_transition_probs(self, action):
+    # returns a list of (probability, reward, s') transition tuples
+    probs = []
+    state, reward = self.check_move(action)
+    probs.append((self.obey_prob, reward, state))
+    disobey_prob = 1 - self.obey_prob
+    if not (disobey_prob > 0.0):
+      return probs
+    if action == 'U' or action == 'D':
+      state, reward = self.check_move('L')
+      probs.append((disobey_prob / 2, reward, state))
+      state, reward = self.check_move('R')
+      probs.append((disobey_prob / 2, reward, state))
+    elif action == 'L' or action == 'R':
+      state, reward = self.check_move('U')
+      probs.append((disobey_prob / 2, reward, state))
+      state, reward = self.check_move('D')
+      probs.append((disobey_prob / 2, reward, state))
+    return probs
 
   def game_over(self):
     # returns true if game is over, else false
@@ -81,7 +87,7 @@ class Grid: # Environment
     return set(self.actions.keys()) | set(self.rewards.keys())
 
 
-def standard_grid():
+def standard_grid(obey_prob=1.0, step_cost=None):
   # define a grid that describes the reward for arriving at each state
   # and possible actions at each state
   # the grid looks like this
@@ -91,6 +97,8 @@ def standard_grid():
   # .  .  .  1
   # .  x  . -1
   # s  .  .  .
+  # obey_brob (float): the probability of obeying the command
+  # step_cost (float): a penalty applied each step to minimize the number of moves (-0.1)
   g = Grid(3, 4, (2, 0))
   rewards = {(0, 3): 1, (1, 3): -1}
   actions = {
@@ -104,24 +112,18 @@ def standard_grid():
     (2, 2): ('L', 'R', 'U'),
     (2, 3): ('L', 'U'),
   }
-  g.set(rewards, actions)
-  return g
-
-
-def negative_grid(step_cost=-0.1):
-  # in this game we want to try to minimize the number of moves
-  # so we will penalize every move
-  g = standard_grid()
-  g.rewards.update({
-    (0, 0): step_cost,
-    (0, 1): step_cost,
-    (0, 2): step_cost,
-    (1, 0): step_cost,
-    (1, 2): step_cost,
-    (2, 0): step_cost,
-    (2, 1): step_cost,
-    (2, 2): step_cost,
-    (2, 3): step_cost,
-  })
+  g.set(rewards, actions, obey_prob)
+  if step_cost is not None:
+    g.rewards.update({
+      (0, 0): step_cost,
+      (0, 1): step_cost,
+      (0, 2): step_cost,
+      (1, 0): step_cost,
+      (1, 2): step_cost,
+      (2, 0): step_cost,
+      (2, 1): step_cost,
+      (2, 2): step_cost,
+      (2, 3): step_cost,
+    })
   return g
 
