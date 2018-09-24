@@ -38,6 +38,28 @@ class Grid: # Environment
   def is_terminal(self, s):
     return s not in self.actions
 
+  def stochastic_move(self, action):
+    p = np.random.random()
+    if p <= self.obey_prob:
+      return action
+    if action == 'U' or action == 'D':
+      return np.random.choice(['L', 'R'])
+    elif action == 'L' or action == 'R':
+      return np.random.choice(['U', 'D'])
+
+  def move(self, action):
+    actual_action = self.stochastic_move(action)
+    if actual_action in self.actions[(self.i, self.j)]:
+      if actual_action == 'U':
+        self.i -= 1
+      elif actual_action == 'D':
+        self.i += 1
+      elif actual_action == 'R':
+        self.j += 1
+      elif actual_action == 'L':
+        self.j -= 1
+    return self.rewards.get((self.i, self.j), 0)
+
   def check_move(self, action):
     i = self.i
     j = self.j
