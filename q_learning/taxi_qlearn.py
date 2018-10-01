@@ -28,7 +28,6 @@ Q = np.zeros((obs_dim, action_dim))
 # we're going to keep track of how many times each Q(s,a) is updated
 # this is for our adaptive learning rate
 state_visit_counts = {}
-Q = np.zeros((obs_dim, action_dim))
 update_counts = np.zeros((obs_dim, action_dim), dtype=np.dtype(int))
 
 def update_Q(prev_state, action, reward, cur_state):
