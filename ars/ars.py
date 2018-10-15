@@ -132,7 +132,7 @@ class ArsTrainer():
 
             # Sort the rollouts by the max(r_pos, r_neg) and select the deltas with best rewards
             scores = {k:max(r_pos, r_neg) for k,(r_pos,r_neg) in enumerate(zip(positive_rewards, negative_rewards))}
-            order = sorted(scores.keys(), key = lambda x:scores[x])[:self.hp.num_best_deltas]
+            order = sorted(scores.keys(), key = lambda x:scores[x], reverse = True)[:self.hp.num_best_deltas]
             rollouts = [(positive_rewards[k], negative_rewards[k], deltas[k]) for k in order]
 
             # Update the policy
