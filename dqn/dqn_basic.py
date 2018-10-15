@@ -1,5 +1,6 @@
 from lib import wrappers
 from lib import dqn_model
+from lib.utils import mkdir
 
 import argparse
 import time
@@ -103,6 +104,7 @@ def calc_loss(batch, net, tgt_net, device="cpu"):
 
 
 if __name__ == "__main__":
+    mkdir('.', 'checkpoints')
     parser = argparse.ArgumentParser()
     parser.add_argument("--cuda", default=False, action="store_true", help="Enable cuda")
     parser.add_argument("--env", default=DEFAULT_ENV_NAME,
@@ -150,7 +152,7 @@ if __name__ == "__main__":
             writer.add_scalar("reward_100", mean_reward, frame_idx)
             writer.add_scalar("reward", reward, frame_idx)
             if best_mean_reward is None or best_mean_reward < mean_reward:
-                torch.save(net.state_dict(), args.env + "-best.dat")
+                torch.save(net.state_dict(), './checkpoints/' + args.env + "-best.dat")
                 if best_mean_reward is not None:
                     print("Best mean reward updated %.3f -> %.3f, model saved" % (best_mean_reward, mean_reward))
                 best_mean_reward = mean_reward
