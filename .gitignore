@@ -4,3 +4,5 @@ __pycache__/
 checkpoints/
 videos/
 runs/
+_vizdoom/
+_vizdoom.ini
