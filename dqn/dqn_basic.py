@@ -1,3 +1,5 @@
+# Forked from https://github.com/PacktPublishing/Deep-Reinforcement-Learning-Hands-On
+
 from lib import wrappers
 from lib import dqn_model
 from lib.utils import mkdir

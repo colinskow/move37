@@ -1,3 +1,5 @@
+# Forked from https://github.com/PacktPublishing/Deep-Reinforcement-Learning-Hands-On
+
 PARAMS = {
     'pong': {
         'env_name':         "PongNoFrameskip-v4",

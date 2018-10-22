@@ -1,3 +1,5 @@
+# Forked from https://github.com/PacktPublishing/Deep-Reinforcement-Learning-Hands-On
+
 import gym
 import ptan
 import argparse
