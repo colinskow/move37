@@ -32,7 +32,7 @@ PPO_STEPS           = 256
 MINI_BATCH_SIZE     = 64
 PPO_EPOCHS          = 10
 TEST_EPOCHS         = 10
-TARGET_REWARD       = 1000
+TARGET_REWARD       = 1800
 
 
 def make_env():
