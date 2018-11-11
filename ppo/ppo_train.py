@@ -23,7 +23,7 @@ from lib.multiprocessing_env import SubprocVecEnv
 NUM_ENVS            = 8 
 ENV_ID              = "RoboschoolHalfCheetah-v1"
 HIDDEN_SIZE         = 256
-LEARNING_RATE       = 1e-3
+LEARNING_RATE       = 1e-4
 GAMMA               = 0.99
 GAE_LAMBDA          = 0.95
 PPO_EPSILON         = 0.2
@@ -72,6 +72,7 @@ def compute_gae(next_value, rewards, masks, values, gamma=GAMMA, tau=GAE_LAMBDA)
     for step in reversed(range(len(rewards))):
         delta = rewards[step] + gamma * values[step + 1] * masks[step] - values[step]
         gae = delta + gamma * tau * masks[step] * gae
+        # prepend to get correct order back
         returns.insert(0, gae + values[step])
     return returns
 
