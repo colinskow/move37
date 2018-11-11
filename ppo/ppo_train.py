@@ -25,14 +25,15 @@ ENV_ID              = "RoboschoolHalfCheetah-v1"
 HIDDEN_SIZE         = 256
 LEARNING_RATE       = 1e-3
 GAMMA               = 0.99
-GAE_TAU             = 0.95
+GAE_LAMBDA          = 0.95
 PPO_EPSILON         = 0.2
+CRITIC_DISCOUNT     = 0.5
 ENTROPY_BETA        = 0.001
 PPO_STEPS           = 256
 MINI_BATCH_SIZE     = 64
 PPO_EPOCHS          = 10
 TEST_EPOCHS         = 10
-TARGET_REWARD       = 1800
+TARGET_REWARD       = 2500
 
 
 def make_env():
@@ -64,7 +65,7 @@ def normalize(x):
     return x
 
 
-def compute_gae(next_value, rewards, masks, values, gamma=GAMMA, tau=GAE_TAU):
+def compute_gae(next_value, rewards, masks, values, gamma=GAMMA, tau=GAE_LAMBDA):
     values = values + [next_value]
     gae = 0
     returns = []
@@ -85,6 +86,7 @@ def ppo_iter(states, actions, log_probs, returns, advantage):
 
 def ppo_update(frame_idx, states, actions, log_probs, returns, advantages, clip_param=PPO_EPSILON):
     count_steps = 0
+    sum_returns = 0.0
     sum_advantage = 0.0
     sum_loss_actor = 0.0
     sum_loss_critic = 0.0
@@ -106,20 +108,23 @@ def ppo_update(frame_idx, states, actions, log_probs, returns, advantages, clip_
             actor_loss  = - torch.min(surr1, surr2).mean()
             critic_loss = (return_ - value).pow(2).mean()
 
-            loss = 0.5 * critic_loss + actor_loss - ENTROPY_BETA * entropy
+            loss = CRITIC_DISCOUNT * critic_loss + actor_loss - ENTROPY_BETA * entropy
 
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
             # track statistics
+            sum_returns += return_.mean()
             sum_advantage += advantage.mean()
             sum_loss_actor += actor_loss
             sum_loss_critic += critic_loss
             sum_loss_total += loss
             sum_entropy += entropy
+            
             count_steps += 1
     
+    writer.add_scalar("returns", sum_returns / count_steps, frame_idx)
     writer.add_scalar("advantage", sum_advantage / count_steps, frame_idx)
     writer.add_scalar("loss_actor", sum_loss_actor / count_steps, frame_idx)
     writer.add_scalar("loss_critic", sum_loss_critic / count_steps, frame_idx)
