@@ -44,7 +44,7 @@ def make_env():
     return _thunk
 
     
-def test_env(model, device, deterministic=True):
+def test_env(env, model, device, deterministic=True):
     state = env.reset()
     done = False
     total_reward = 0
@@ -159,7 +159,6 @@ if __name__ == "__main__":
     frame_idx  = 0
     train_epoch = 0
     best_reward = None
-    test_rewards = []
 
     state = envs.reset()
     early_stop = False
@@ -172,7 +171,6 @@ if __name__ == "__main__":
         actions   = []
         rewards   = []
         masks     = []
-        entropy = 0
 
         for _ in range(PPO_STEPS):
             state = torch.FloatTensor(state).to(device)
@@ -181,9 +179,7 @@ if __name__ == "__main__":
             action = dist.sample()
             # each state, reward, done is a list of results from each parallel environment
             next_state, reward, done, _ = envs.step(action.cpu().numpy())
-
             log_prob = dist.log_prob(action)
-            entropy += dist.entropy().mean()
             
             log_probs.append(log_prob)
             values.append(value)
@@ -212,8 +208,7 @@ if __name__ == "__main__":
         train_epoch += 1
 
         if train_epoch % TEST_EPOCHS == 0:
-            test_reward = np.mean([test_env(model, device) for _ in range(10)])
-            test_rewards.append(test_reward)
+            test_reward = np.mean([test_env(env, model, device) for _ in range(10)])
             writer.add_scalar("test_rewards", test_reward, frame_idx)
             print('Frame %s. reward: %s' % (frame_idx, test_reward))
             # Save a checkpoint every time we achieve a best reward
