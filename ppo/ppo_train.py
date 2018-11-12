@@ -33,6 +33,7 @@ PPO_STEPS           = 256
 MINI_BATCH_SIZE     = 64
 PPO_EPOCHS          = 10
 TEST_EPOCHS         = 10
+NUM_TESTS           = 10
 TARGET_REWARD       = 2500
 
 
@@ -65,13 +66,13 @@ def normalize(x):
     return x
 
 
-def compute_gae(next_value, rewards, masks, values, gamma=GAMMA, tau=GAE_LAMBDA):
+def compute_gae(next_value, rewards, masks, values, gamma=GAMMA, lam=GAE_LAMBDA):
     values = values + [next_value]
     gae = 0
     returns = []
     for step in reversed(range(len(rewards))):
         delta = rewards[step] + gamma * values[step + 1] * masks[step] - values[step]
-        gae = delta + gamma * tau * masks[step] * gae
+        gae = delta + gamma * lam * masks[step] * gae
         # prepend to get correct order back
         returns.insert(0, gae + values[step])
     return returns
@@ -208,7 +209,7 @@ if __name__ == "__main__":
         train_epoch += 1
 
         if train_epoch % TEST_EPOCHS == 0:
-            test_reward = np.mean([test_env(env, model, device) for _ in range(10)])
+            test_reward = np.mean([test_env(env, model, device) for _ in range(NUM_TESTS)])
             writer.add_scalar("test_rewards", test_reward, frame_idx)
             print('Frame %s. reward: %s' % (frame_idx, test_reward))
             # Save a checkpoint every time we achieve a best reward
